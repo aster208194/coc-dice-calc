@@ -88,8 +88,8 @@ function App() {
       extreme: { prob: calculateSuccessProb(Math.floor(skillValue / 5), netDice), threshold: Math.floor(skillValue / 5) },
       critical: calculateSuccessProb(1, netDice) * 100,
       fumble: skillValue >= 50
-        ? (1 - calculateSuccessProb(95, netDice)) * 100
-        : (1 - calculateSuccessProb(99, netDice)) * 100,
+        ? (1 - calculateSuccessProb(99, netDice)) * 100
+        : (1 - calculateSuccessProb(95, netDice)) * 100,
     };
   }, [skillValue, netDice, hasSkill]);
 
@@ -369,7 +369,7 @@ function App() {
                   <span className="tabular-nums" style={{ color: "#fbbf24" }}>{results.critical.toFixed(2)}%</span>
                 </div>
                 <div className="flex justify-between">
-                  <span style={{ color: "#4a5568" }}>ファンブル（{skillValue >= 50 ? "96〜00" : "= 00"}）</span>
+                  <span style={{ color: "#4a5568" }}>ファンブル（{skillValue >= 50 ? "= 00" : "96〜00"}）</span>
                   <span className="tabular-nums" style={{ color: "#ef4444" }}>{results.fumble.toFixed(2)}%</span>
                 </div>
               </div>
