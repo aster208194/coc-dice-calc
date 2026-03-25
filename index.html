@@ -75,8 +75,8 @@ function App() {
     if (!hasSkill) return null;
     const prob = calculateSuccessProb(skillValue, netDice);
     const deltaRaw = prob * 100 - skillValue;
+    const correction = Math.floor(Math.round(deltaRaw * 1e12) / 1e12);
     const delta = Math.round(deltaRaw * 100) / 100;
-    const correction = Math.floor(delta);
     const corrected = Math.max(1, Math.min(99, skillValue + correction));
 
     return {
