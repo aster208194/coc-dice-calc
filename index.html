@@ -87,7 +87,9 @@ function App() {
       hard: { prob: calculateSuccessProb(Math.floor(skillValue / 2), netDice), threshold: Math.floor(skillValue / 2) },
       extreme: { prob: calculateSuccessProb(Math.floor(skillValue / 5), netDice), threshold: Math.floor(skillValue / 5) },
       critical: calculateSuccessProb(1, netDice) * 100,
-      fumble: (1 - calculateSuccessProb(99, netDice)) * 100,
+      fumble: skillValue >= 50
+        ? (1 - calculateSuccessProb(95, netDice)) * 100
+        : (1 - calculateSuccessProb(99, netDice)) * 100,
     };
   }, [skillValue, netDice, hasSkill]);
 
@@ -95,36 +97,12 @@ function App() {
     if (!hasSkill || !results || netDice === 0) return;
     const sign = results.correction >= 0 ? `+${results.correction}` : `${results.correction}`;
     const text = `CCB<=${skillValue}${sign}`;
-    const doCopy = () => {
-      const ta = document.createElement("textarea");
-      ta.value = text;
-      ta.style.position = "fixed";
-      ta.style.opacity = "0";
-      document.body.appendChild(ta);
-      ta.focus();
-      ta.select();
-      document.execCommand("copy");
-      document.body.removeChild(ta);
-    };
-    try {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(() => {
-          setCopyToast(true);
-          setTimeout(() => setCopyToast(false), 1800);
-        }).catch(() => {
-          doCopy();
-          setCopyToast(true);
-          setTimeout(() => setCopyToast(false), 1800);
-        });
-      } else {
-        doCopy();
-        setCopyToast(true);
-        setTimeout(() => setCopyToast(false), 1800);
-      }
-    } catch (e) {
-      doCopy();
+    const showToast = () => {
       setCopyToast(true);
       setTimeout(() => setCopyToast(false), 1800);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(showToast).catch(() => showToast());
     }
   }, [hasSkill, results, skillValue, netDice]);
 
@@ -185,6 +163,7 @@ function App() {
                 <input
                   type="text"
                   inputMode="numeric"
+                  aria-label="技能値"
                   value={skillInput}
                   onChange={(e) => {
                     const raw = e.target.value.replace(/[^0-9]/g, "");
@@ -207,9 +186,11 @@ function App() {
             </div>
             <input
               type="range" min={1} max={99} value={hasSkill ? skillValue : 50}
+              aria-label="技能値スライダー"
               onChange={(e) => { const v = parseInt(e.target.value); setSkillValue(v); setSkillInput(String(v)); }}
               className="w-full h-1 rounded-full appearance-none cursor-pointer"
               style={{
+                opacity: hasSkill ? 1 : 0.4,
                 background: hasSkill
                   ? `linear-gradient(90deg, #475569 0%, #475569 ${skillValue}%, rgba(255,255,255,0.06) ${skillValue}%, rgba(255,255,255,0.06) 100%)`
                   : "linear-gradient(90deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.06) 100%)",
@@ -230,11 +211,12 @@ function App() {
             <div className="flex items-center justify-center gap-3 mb-3">
               <button
                 onClick={() => { const v = Math.max(-10, netDice - 1); setNetDice(v); setDiceInput(String(v)); }}
+                aria-label="ペナルティダイスを1つ追加"
                 className="flex items-center justify-center rounded-lg"
                 style={{ width: 36, height: 36, fontSize: 18, color: "#fca5a5", background: "rgba(252,165,165,0.08)", border: "1px solid rgba(252,165,165,0.2)" }}
               >−</button>
               <input
-                type="text" inputMode="numeric" value={diceInput}
+                type="text" inputMode="numeric" aria-label="ボーナス/ペナルティダイス数" value={diceInput}
                 onChange={(e) => {
                   const raw = e.target.value.replace(/[^0-9\-]/g, "");
                   setDiceInput(raw);
@@ -253,6 +235,7 @@ function App() {
               />
               <button
                 onClick={() => { const v = Math.min(10, netDice + 1); setNetDice(v); setDiceInput(String(v)); }}
+                aria-label="ボーナスダイスを1つ追加"
                 className="flex items-center justify-center rounded-lg"
                 style={{ width: 36, height: 36, fontSize: 18, color: "#6ee7b7", background: "rgba(110,231,183,0.08)", border: "1px solid rgba(110,231,183,0.2)" }}
               >+</button>
@@ -260,6 +243,7 @@ function App() {
 
             <input
               type="range" min={-10} max={10} value={netDice}
+              aria-label="ボーナス/ペナルティダイススライダー"
               onChange={(e) => { const v = parseInt(e.target.value); setNetDice(v); setDiceInput(String(v)); }}
               className="w-full h-1 rounded-full appearance-none cursor-pointer"
               style={{
@@ -385,7 +369,7 @@ function App() {
                   <span className="tabular-nums" style={{ color: "#fbbf24" }}>{results.critical.toFixed(2)}%</span>
                 </div>
                 <div className="flex justify-between">
-                  <span style={{ color: "#4a5568" }}>ファンブル（= 100）</span>
+                  <span style={{ color: "#4a5568" }}>ファンブル（{skillValue >= 50 ? "96〜00" : "= 00"}）</span>
                   <span className="tabular-nums" style={{ color: "#ef4444" }}>{results.fumble.toFixed(2)}%</span>
                 </div>
               </div>
